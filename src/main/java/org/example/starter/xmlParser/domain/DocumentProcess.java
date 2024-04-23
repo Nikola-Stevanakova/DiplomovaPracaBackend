@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "document")
-public class Document {
+public class DocumentProcess {
     private String id;
     private String initials;
     private String title;
