@@ -1,7 +1,7 @@
 package org.example.starter.startup
 
 import com.netgrif.application.engine.startup.AbstractOrderedCommandLineRunner
-import org.example.starter.liquibase.LiquibaseRunner
+import org.example.starter.changeloggenerator.ChangelogGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -11,12 +11,13 @@ class CustomRunner extends AbstractOrderedCommandLineRunner {
 
     private static Logger log = LoggerFactory.getLogger(CustomRunner.class)
 
-    LiquibaseRunner liquibaseRunnerJ = new LiquibaseRunner();
+    private ChangelogGenerator changelogGenerator = new ChangelogGenerator();
+//    private LiquibaseRunner liquibaseRunner = new LiquibaseRunner()
 
     @Override
     void run(String... args) throws Exception {
         log.info("Calling custom runner");
 
-        liquibaseRunnerJ.performDatabaseUpdate()
+        changelogGenerator.generateChangelogFile()
     }
 }

@@ -1,4 +1,4 @@
-package org.example.starter.xmlParser.domain;
+package org.example.starter.xmlparser.domain;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

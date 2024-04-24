@@ -1,6 +1,6 @@
-package org.example.starter.xmlParser;
+package org.example.starter.xmlparser;
 
-import org.example.starter.xmlParser.domain.DocumentProcess;
+import org.example.starter.xmlparser.domain.DocumentProcess;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -9,9 +9,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XMLParser {
+public class XmlParser {
 
-    public List<DocumentProcess> parseXML () {
+    public List<DocumentProcess> parseXmlFiles () {
         List<DocumentProcess> documentProcessList = new ArrayList<>();
         try {
             File[] files = new File("src/main/resources/petriNets").listFiles();
