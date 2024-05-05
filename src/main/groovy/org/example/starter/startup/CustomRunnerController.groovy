@@ -7,7 +7,6 @@ class CustomRunnerController extends RunnerController {
     private List order = [
             ElasticsearchRunner,
             MongoDbRunner,
-//            TODO: postgre runner
             ProcessReaderRunner,
             StorageRunner,
             RuleEngineRunner,

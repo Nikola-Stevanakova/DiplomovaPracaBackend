@@ -8,9 +8,7 @@ import org.example.starter.databaseconnector.domain.DatabaseSchema;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DatabaseService {
@@ -21,7 +19,7 @@ public class DatabaseService {
 //    @Autowired
 //    private LiquibaseProperties liquibaseProperties;
 
-//    @Autowired
+    //    @Autowired
 //    private XmlProperties xmlProperties;
     private final static String TABLE_LABEL = "TABLE_NAME";
     private final static String COLUMN_LABEL = "COLUMN_NAME";

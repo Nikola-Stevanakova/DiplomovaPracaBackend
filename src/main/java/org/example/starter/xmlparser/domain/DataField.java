@@ -11,9 +11,9 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "data")
 public class DataField {
     private String id;
-    private String type;
     private String title;
     private String init;
+    private String placeholder;
     @XmlAttribute(name = "type")
     private String tagName;
 }

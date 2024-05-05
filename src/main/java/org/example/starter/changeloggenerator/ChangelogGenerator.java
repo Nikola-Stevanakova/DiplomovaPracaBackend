@@ -1,11 +1,12 @@
 package org.example.starter.changeloggenerator;
 
-import org.apache.xpath.operations.Bool;
+import com.netgrif.application.engine.elastic.service.ElasticCaseService;
 import org.example.starter.databaseconnector.domain.DatabaseSchema;
 import org.example.starter.databaseconnector.DatabaseService;
 import org.example.starter.xmlparser.XmlParser;
 import org.example.starter.xmlparser.domain.DataField;
 import org.example.starter.xmlparser.domain.DocumentProcess;
+import org.kie.dmn.feel.util.Pair;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -23,80 +24,293 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Service
 public class ChangelogGenerator {
 
+    public static final HashMap<String, String> DATA_TYPES_MAP = new HashMap<>() {{
+        put("number", "integer");
+        put("text", "varchar(255)");
+        put("enumeration", "varchar(255)");
+        put("enumeration_map", "varchar(255)");
+        put("multichoice", "varchar(255)");
+        put("multichoice_map", "varchar(255)");
+        put("boolean", "boolean");
+        put("date", "date");
+        put("dateTime", "timestamp");
+        put("file", "varchar(255)");
+        put("fileList", "varchar(255)");
+        put("user", "varchar(255)");
+        put("userList", "varchar(255)");
+        put("i18n", "varchar(255)");
+        put("taskRef", "varchar(255)");
+        put("caseRef", "varchar(255)");
+    }};
+
+    public static final HashMap<String, String> CONSTRAINTS_PRIMARY_KEY_ATTRIBUTES = new HashMap<>() {{
+        put("nullable", "false");
+        put("primaryKey", "true");
+    }};
+
     private final DatabaseService databaseService = new DatabaseService();
     private final XmlParser xmlParser = new XmlParser();
+    private final ElasticCaseService elasticCaseService;
 
+    public ChangelogGenerator(ElasticCaseService elasticCaseService) {
+        this.elasticCaseService = elasticCaseService;
+    }
+
+    /**
+     * The method gets and compares the database schema and xml files and runs a function to generate the changeset.
+     * The method returns true if the changeset has been generated successfully, otherwise it returns false.
+     */
     public boolean generateChangelogFile() {
         List<DocumentProcess> documentProcessList = xmlParser.parseXmlFiles();
         List<DatabaseSchema> databaseSchemaList = databaseService.getDatabaseSchema();
-        return compareDatabaseSchemaAndProcesses(databaseSchemaList, documentProcessList);
+        return checkFilesAndCompareDatabaseSchemaAndProcesses(databaseSchemaList, documentProcessList);
     }
 
-    public boolean compareDatabaseSchemaAndProcesses(List<DatabaseSchema> databaseSchemaList, List<DocumentProcess> documentProcessList) {
-        if (!checkChangelogFileState()) {
+    /**
+     * The method checks if the necessary files exist to write the changes.
+     * If they exist, the method generates and writes the changeset and returns true, otherwise it returns false.
+     *
+     * @param databaseSchemaList  list of database tables
+     * @param documentProcessList list of processes
+     */
+    public boolean checkFilesAndCompareDatabaseSchemaAndProcesses(List<DatabaseSchema> databaseSchemaList, List<DocumentProcess> documentProcessList) {
+        if (!checkChangelogFilesContent()) {
             System.out.println("Nepodarilo sa vytvoriť changelog");
             return false;
         }
 
-        List<String> tableNames = databaseSchemaList.stream().map(DatabaseSchema::getTableName).collect(Collectors.toList());
-
-        for (DocumentProcess documentProcess : documentProcessList) {
-            String documentProcessId = documentProcess.getId();
-            if (tableNames.contains(documentProcessId)) {
-                // prejst datove fieldy
-                HashMap<String, String> dataMapDatabaseSchema = databaseSchemaList.stream()
-                        .filter(processSchema -> processSchema.getTableName().equals(documentProcessId))
-                        .findAny()
-                        .map(DatabaseSchema::getColumnNameType)
-                        .orElse(new HashMap<>());
-
-//                assertThat(dataList).containsExactlyInAnyOrderElementsOf();
-                List<String> dataListDocumentProcess = documentProcess.getDataList().stream().map(DataField::getId).collect(Collectors.toList());
-
-
-            } else {
-                //TODO: create Table changelog
-
-            }
-        }
-
-//        for (DatabaseSchema databaseSchema : databaseSchemaList) {
-//            List<String> processIds = documentProcessList.stream().map(DocumentProcess::getId).collect(Collectors.toList());
-//            if (processIds.contains(databaseSchema.getTableName())) {
-//
-//            } else {
-//                //TODO: drop table
-//            }
-//        }
-        return true;
+        return compareDatabaseSchemaAndProcesses(databaseSchemaList, documentProcessList);
     }
 
-    /**
-     * The method deletes the contents of the file or creates the file if file does not exist.
-     */
-    private boolean checkChangelogFileState() {
-        // TODO: properties
-        String changeLogFileNamePath = "src/main/resources/db/changelog.xml";
-        Boolean changeLogFileResult = getFileOrCreateIfNotExist(changeLogFileNamePath);
-
-        if (changeLogFileResult){
-            // TODO: properties
+    private boolean compareDatabaseSchemaAndProcesses(List<DatabaseSchema> databaseSchemaList, List<DocumentProcess> documentProcessList){
+        try {
             String changesetFileNamePath = "src/main/resources/db/changeset/changelog_changeset.xml";
-            return getFileOrCreateIfNotExist(changesetFileNamePath);
+            File changesetFile = new File(changesetFileNamePath);
+
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+            Document changelogDocument = docBuilder.parse(changesetFile);
+            changelogDocument.getDocumentElement().normalize();
+
+//            najdi changelog
+            NodeList changelogList = changelogDocument.getElementsByTagName("databaseChangeLog");
+            Element changelogElement = (Element) changelogList.item(0);
+
+//            najdi changeset
+            Element createTableChangeset = createChangeSetElement(changelogDocument, changelogElement);
+            Element updateTableChangeset = createChangeSetElement(changelogDocument, changelogElement);
+            Element removeTableChangeset = createChangeSetElement(changelogDocument, changelogElement);
+
+//          zoberiem tabulky z databazy a idem prechadzat procesy a vytvarat tabulky, ktore este neexistuju
+            List<String> tableNames = databaseSchemaList.stream().filter(databaseSchema ->
+                    !databaseSchema.getTableName().equals("databasechangelog") && !databaseSchema.getTableName().equals("databasechangeloglock")).map(DatabaseSchema::getTableName).collect(Collectors.toList());
+
+            List<String> checkedTables = new ArrayList<>();
+            for (DocumentProcess documentProcess : documentProcessList) {
+                String documentProcessId = documentProcess.getId();
+                if (tableNames.contains(documentProcessId)) {
+                    // prejst datove fieldy
+                    HashMap<String, String> dataMapDatabaseSchema = databaseSchemaList.stream()
+                            .filter(processSchema -> processSchema.getTableName().equals(documentProcessId))
+                            .findAny()
+                            .map(DatabaseSchema::getColumnNameType)
+                            .orElse(new HashMap<>());
+
+//                assertThat(dataList).containsExactlyInAnyOrderElementsOf();
+                    HashMap<String, String> dataMapProcess= (HashMap<String, String>) documentProcess.getDataList().stream().filter(dataField -> !dataField.getTagName().equals("button")).collect(Collectors.toMap(DataField::getId, DataField::getTagName));
+
+                    List<String> checkedCols = new ArrayList<>();
+                    for(Map.Entry<String, String> data: dataMapProcess.entrySet()) {
+//                        skontrolujeme ci to nie je caseref
+                        if(data.getValue().equals("caseRef")) {
+                            String[] dataSplit = data.getKey().split("_");
+//                            vymysliet inak logiku... zabezpecit aby sa bral regex split podla poslendeho znaku
+                            List<DataField> dataFieldList = documentProcessList.stream().filter(documentProcess1 ->
+                                    documentProcess1.getId().equals(dataSplit[0])).map(DocumentProcess::getDataList).findFirst().get();
+                            String firstRelation = data.getKey();
+                            String secondRelation = dataFieldList.stream().filter(dataField -> dataField.getId().equals(documentProcessId + "_id") || dataField.getId().equals(documentProcessId + "_ids")).findFirst().get().getId();
+                            if(firstRelation.contains("_ids") && secondRelation.contains("_ids")) {
+
+                            } else if(firstRelation.contains("_ids") && secondRelation.contains("_id")) {
+
+                            } else if(firstRelation.contains("_ids") && secondRelation.contains("_ids")) {
+
+                            } else if(firstRelation.contains("_ids") && secondRelation.contains("_ids")){
+
+                            }
+//                            if(!(relationsMap.containsKey() && relationsMap.containsValue(data.getKey())) || !(relationsMap.containsKey(data.getValue()) && relationsMap.containsValue())) {
+//
+//                            }
+                        } else {
+                            if(dataMapDatabaseSchema.containsKey(data.getKey())){
+                                if(!dataMapDatabaseSchema.get(data.getKey()).equals(DATA_TYPES_MAP.get(data.getValue()))){
+                                    generateDropColumn(changelogDocument, updateTableChangeset, documentProcessId, data.getKey());
+                                    generateAddColumns(changelogDocument, updateTableChangeset, documentProcessId, data.getKey(), data.getValue());
+                                }
+                            } else {
+                                generateAddColumns(changelogDocument, updateTableChangeset, documentProcessId, data.getKey(), data.getValue());
+                            }
+                            checkedCols.add(data.getKey());
+                        }
+                    }
+//                    dropcols pre vsetky ktore zostali v databaze
+                    for(Map.Entry<String, String> data: dataMapDatabaseSchema.entrySet()) {
+                        if(!checkedCols.contains(data.getKey())){
+                            generateDropColumn(changelogDocument, updateTableChangeset, documentProcessId, data.getKey());
+                        }
+                    }
+                } else {
+                    generateCreateTableElement(changelogDocument, createTableChangeset, documentProcess);
+                }
+                checkedTables.add(documentProcessId);
+            }
+
+//            todo: kontrola vztahov
+
+            for (DatabaseSchema databaseSchema : databaseSchemaList) {
+                if (!checkedTables.contains(databaseSchema.getTableName())) {
+                    generateDropTable(changelogDocument, removeTableChangeset, databaseSchema.getTableName());
+                }
+            }
+
+            writeContentToXmlFile(changelogDocument, changesetFileNamePath);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return false;
     }
 
-    private Boolean getFileOrCreateIfNotExist(String filePath) {
+    private void generateDropColumn(Document changelogDocument, Element updateTableChangeset, String documentProcessId, String dataName) {
+        Element dropColumnElement = changelogDocument.createElement("dropColumn");
+        dropColumnElement.setAttribute("schemaName", "public");
+        dropColumnElement.setAttribute("tableName", documentProcessId);
+
+        HashMap<String, String> columnAttributes = new HashMap<>() {{
+            put("name", dataName);
+        }};
+        Element columnElement = createElement(changelogDocument,"column", columnAttributes);
+        dropColumnElement.appendChild(columnElement);
+
+        updateTableChangeset.appendChild(dropColumnElement);
+    }
+
+    private void generateAddColumns(Document changelogDocument, Element updateTableChangeset, String documentProcessId, String dataName, String dataType) {
+        Element addColumnElement = changelogDocument.createElement("addColumn");
+        addColumnElement.setAttribute("schemaName", "public");
+        addColumnElement.setAttribute("tableName", documentProcessId);
+
+        HashMap<String, String> columnAttributes = new HashMap<>() {{
+            put("name", dataName);
+//              TODO: put("type", dataType);
+            put("type", DATA_TYPES_MAP.get(dataType));
+        }};
+        Element columnElement = createElement(changelogDocument,"column", columnAttributes);
+        addColumnElement.appendChild(columnElement);
+
+        updateTableChangeset.appendChild(addColumnElement);
+    }
+
+    private void generateDropTable(Document changelogDocument, Element removeTableChangeset, String databaseSchemaTableName) {
+        Element dropTableElement = changelogDocument.createElement("dropTable");
+        dropTableElement.setAttribute("schemaName", "public");
+        dropTableElement.setAttribute("tableName", databaseSchemaTableName);
+
+        removeTableChangeset.appendChild(dropTableElement);
+    }
+
+    private void generateCreateTableElement(Document changelogDocument, Element changeSetElement, DocumentProcess documentProcess) {
+        Element createTableElement = changelogDocument.createElement("createTable");
+        createTableElement.setAttribute("tableName", documentProcess.getId());
+
+        HashMap<String, String> columnAttributes = new HashMap<>() {{
+            put("name", "id");
+            put("type", "uuid");
+        }};
+        Element columnIdElement = createElement(changelogDocument,"column", columnAttributes);
+        columnIdElement.appendChild(createElement(changelogDocument,"constraints", CONSTRAINTS_PRIMARY_KEY_ATTRIBUTES));
+
+        createTableElement.appendChild(columnIdElement);
+
+        for(DataField dataField : documentProcess.getDataList()) {
+            if (!dataField.getTagName().equals("button")) {
+                HashMap<String, String> attributes = new HashMap<>(){{
+                    put("name", dataField.getId());
+//                TODO: funkcia ktora vrati type na zaklade tagname
+                    put("type", DATA_TYPES_MAP.get(dataField.getTagName()));
+                }};
+                createTableElement.appendChild(createElement(changelogDocument,"column", attributes));
+            }
+        }
+
+        changeSetElement.appendChild(createTableElement);
+    }
+
+    /**
+     * The method creates and adds new changeSet elements to the changelog file, with each new element having a unique ID.
+     *
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param changelogElement reference to the root element of the changelog where the new include element is added
+     */
+    private Element createChangeSetElement(Document changelogDocument, Element changelogElement) {
+        String newId = generateId();
+
+        Element changeSetElement = changelogDocument.createElement("changeSet");
+        changeSetElement.setAttribute("id", newId);
+        changeSetElement.setAttribute("author", "admin");
+        changelogElement.appendChild(changeSetElement);
+        return changeSetElement;
+    }
+
+    /**
+     * Method to generate the uniq ID for changeset.
+     */
+    private String generateId(){
+        UUID uuid = UUID.randomUUID();
+        return uuid.toString();
+    }
+
+    private Element createElement(Document changelogDocument, String tagName, HashMap<String, String> attributes) {
+        Element element = changelogDocument.createElement(tagName);
+        for (Map.Entry<String, String> attribute : attributes.entrySet()) {
+            element.setAttribute(attribute.getKey(), attribute.getValue());
+        }
+        return element;
+    }
+
+    /**
+     * The method checks the contents of the two XML files and returns true if the contents are correct.
+     */
+    private boolean checkChangelogFilesContent() {
+        // TODO: properties
+        String changeLogFileNamePath = "src/main/resources/db/changelog.xml";
+        String changesetFileNamePath = "src/main/resources/db/changeset/changelog_changeset.xml";
+
+        boolean changeLogFileResult = checkFileContent(changeLogFileNamePath, true);
+
+        if (changeLogFileResult) {
+            // TODO: properties
+            return checkFileContent(changesetFileNamePath, false);
+        }
+        return false;
+    }
+
+    /**
+     * The method is used to ensure that the given file exists and its contents are correct.
+     * The method returns true if the file exists and its contents were successfully checked.
+     * If it returns false, there was a problem creating the file or an error checking its contents.
+     *
+     * @param filePath          path to the file
+     * @param mainChangeLogFile argument determines whether it is the main changelog file or a changelog file that contains a set of changes
+     */
+    private boolean checkFileContent(String filePath, boolean mainChangeLogFile) {
         File newFile = new File(filePath);
 
         if (!newFile.exists()) {
@@ -104,55 +318,81 @@ public class ChangelogGenerator {
                 boolean created = newFile.createNewFile();
 
                 if (created) {
-                    System.out.println("Súbor " + filePath + " bol úspešne vytvorený.");
-                    return checkContentOfChangelogFile(newFile, filePath);
+                    return checkContentOfChangelogFile(newFile, filePath, mainChangeLogFile);
                 } else {
-                    System.out.println("Nepodarilo sa vytvoriť súbor " + filePath + ".");
                     return false;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("Súbor " + filePath + " už existuje.");
-            return checkContentOfChangelogFile(newFile, filePath);
+            return checkContentOfChangelogFile(newFile, filePath, mainChangeLogFile);
         }
         return false;
     }
 
     /**
-     * The method check if file with set of changes contains root element ChangeLog and if
-     * not, creates a new changelog item.
+     * This method ensures that the contents of the changelog file are initialized correctly depending on whether the file
+     * is the main changelog file or not. Returns true if updated successfully, false otherwise.
      *
-     * @param changelogFile file with set of changes
+     * @param changelogFile     file with set of changes
+     * @param filePath          path to file with set of changes
+     * @param mainChangeLogFile argument determines whether it is the main changelog file or a changelog file that contains a set of changes
      */
-    private Boolean checkContentOfChangelogFile(File changelogFile, String filePath) {
+    private boolean checkContentOfChangelogFile(File changelogFile, String filePath, boolean mainChangeLogFile) {
+        if (mainChangeLogFile && changelogFile.length() > 0) {
+            return updateRootElement(changelogFile, filePath);
+        }
+        return createNewRootElement(filePath, mainChangeLogFile);
+    }
+
+    /**
+     * The method checks whether there is a changelog element in the file and subsequently checks the existence of include elements.
+     * If there is no include element of the file "changelogs/changelog_changeset.xml", it will add it. Finally, it saves the changes back to the file.
+     * The method returns true if the file was modified successfully.
+     *
+     * @param changelogFile     file with set of changes
+     * @param filePath          path to file with set of changes
+     */
+    private boolean updateRootElement(File changelogFile, String filePath) {
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document changelogDocument = docBuilder.parse(changelogFile);
+            changelogDocument.getDocumentElement().normalize();
 
-            if (changelogFile.length() == 0) {
-                createRootElement(docBuilder, filePath);
-            } else {
-                Document changelogDocument = docBuilder.parse(changelogFile);
-                Element rootElement = changelogDocument.getDocumentElement();
-                createRootElement(docBuilder, filePath);
-//                if (rootElement.getNodeName().equals("databaseChangeLog") && rootElement.getElementsByTagName()) {
-//                   TODO: dorobit to aby cjangelog obsahoval include file... vtedz sa nevygeneruje novy file... ak includes neobsahuje, vygeneruje sa novy file
-                    // este tam treba skontrovat ci ten include file je changeset
-//                }
-//                    new FileWriter(filePath, false).close();
-//
-//                    createRootElement(docBuilder, filePath);
-//                } else {
-//                    NodeList childElements = rootElement.getElementsByTagName("changeSet");
-//                    if (childElements != null) {
-////                       List<Node> nodes = childElements.stream().map(child->child.getNodeName().equals("changeSet")).collect(Collectors.toList());
-////                       for (Node node: nodes) {
-////                           rootElement.removeChild(node);
-////                       }
-//                    }
-//                }
+            NodeList changelogList = changelogDocument.getElementsByTagName("databaseChangeLog");
+            if (changelogList.getLength() == 0) {
+                return createNewRootElement(filePath, true);
+            }
+
+            Element changelogElement = (Element) changelogList.item(0);
+
+            NodeList includeList = changelogElement.getElementsByTagName("include");
+            if (includeList.getLength() == 0) {
+                createIncludeElement(changelogDocument, changelogElement);
+                writeContentToXmlFile(changelogDocument, filePath);
+                return true;
+            }
+
+            boolean changelogChangesetIncluded = false;
+
+            for (int i = 0; i < includeList.getLength(); i++) {
+                Node includeNode = includeList.item(i);
+                if (includeNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element includeElement = (Element) includeNode;
+                    String fileAttribute = includeElement.getAttribute("file");
+
+                    if (fileAttribute.equals("changeset/changelog_changeset.xml")) {
+                        changelogChangesetIncluded = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!changelogChangesetIncluded) {
+                createIncludeElement(changelogDocument, changelogElement);
+                writeContentToXmlFile(changelogDocument, filePath);
             }
             return true;
         } catch (Exception e) {
@@ -162,96 +402,54 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method creates and append root element changelog to xml file.
+     * The method initializes a new changelog file and adds an include element if it is the main changelog file.
+     * If it is a changeset file, it adds a changeset element and generates a unique id for it.
      *
-     * @param docBuilder class to create Document instance for XML document
+     * @param filePath              path to file with set of changes
+     * @param mainChangeLogFile     argument determines whether it is the main changelog file or a changelog file that contains a set of changes
      */
-    private void createRootElement(DocumentBuilder docBuilder, String filePath) {
-        Document changelogDocument = docBuilder.newDocument();
-        Element rootElement = changelogDocument.createElement("databaseChangeLog");
-        rootElement.setAttribute("xmlns", "http://www.liquibase.org/xml/ns/dbchangelog");
-        rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-        rootElement.setAttribute("xsi:schemaLocation", "http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd");
-        changelogDocument.appendChild(rootElement);
-        writeContentToXmlFile(changelogDocument, filePath);
-    }
-
-    /**
-     * The method to create a set of changes file of all processes and save it to the xml file.
-     *
-     * @param documentProcessList list of process objects transformed from xml files
-     */
-    public void generateChangesets(List<DocumentProcess> documentProcessList) {
-//        String changesetFileNamePath = liquibaseProperties.getChangeLogChangeSetFile();
-        String changesetFileNamePath = "src/main/resources/db/changelog_changeset.xml";
-        Document changesetDoc;
-        Element rootElement;
-
+    private boolean createNewRootElement(String filePath, boolean mainChangeLogFile) {
         try {
-            File changesetFile = new File(changesetFileNamePath);
-
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 
-            if (changesetFile.length() == 0) {
-                changesetDoc = docBuilder.newDocument();
-                rootElement = changesetDoc.createElement("changeSet");
-                changesetDoc.appendChild(rootElement);
-            } else {
-                changesetDoc = docBuilder.parse(changesetFile);
-                rootElement = changesetDoc.getDocumentElement();
+            Document changelogDocument = docBuilder.newDocument();
+            Element rootElement = changelogDocument.createElement("databaseChangeLog");
+            rootElement.setAttribute("xmlns", "http://www.liquibase.org/xml/ns/dbchangelog");
+            rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            rootElement.setAttribute("xsi:schemaLocation", "http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd");
+
+            if (mainChangeLogFile) {
+                createIncludeElement(changelogDocument, rootElement);
             }
+            changelogDocument.appendChild(rootElement);
+            writeContentToXmlFile(changelogDocument, filePath);
 
-            // Nastavi sa id changesetu
-            // TODO: dorobit automaticke generovanie jedinecneho id changesetu
-            rootElement.setAttribute("author", "admin");
-            rootElement.setAttribute("id", "changeset_0");
-
-            for (DocumentProcess documentProcess : documentProcessList) {
-                Element generateChangeSetElement = generateChangeSetElement(changesetDoc, documentProcess);
-                rootElement.appendChild(generateChangeSetElement);
-            }
-
-            writeContentToXmlFile(changesetDoc, changesetFileNamePath);
-
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
-
 
     /**
-     * The method creates a change based on one process and returns this change in the form of an Element class,
-     * which is then transformed and stored in the generated changeset.
+     * The method creates and adds an include element to an existing changelog document.
      *
-     * @param changesetDoc    the object containing the set of changes that need to be made
-     * @param documentProcess the process object containing data fields of process
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param changelogElement reference to the root element of the changelog where the new include element is added
      */
-    private static Element generateChangeSetElement(Document changesetDoc, DocumentProcess documentProcess) {
-//        tu bude logika na to ci sa generuje createTable alebo drop table
-        // TODO: dorobit generovanie jedinecneho id tabulky
-        String tableName = documentProcess.getId() + "_table";
-
-        Element createTableElement = changesetDoc.createElement("createTable");
-        createTableElement.setAttribute("tableName", tableName);
-
-        List<DataField> dataList = documentProcess.getDataList();
-        for (DataField data : dataList) {
-            Element columnElement = changesetDoc.createElement("column");
-            columnElement.setAttribute("name", data.getId());
-            // TODO: type upravit
-            columnElement.setAttribute("type", "varchar(255)");
-            createTableElement.appendChild(columnElement);
-        }
-        return createTableElement;
+    private void createIncludeElement(Document changelogDocument, Element changelogElement) {
+        Element newIncludeElement = changelogDocument.createElement("include");
+        newIncludeElement.setAttribute("file", "changeset/changelog_changeset.xml");
+        newIncludeElement.setAttribute("relativeToChangelogFile", "true");
+        changelogElement.appendChild(newIncludeElement);
     }
-
 
     /**
      * The method transforms the object with a set of changes into xml format and saves it to the file.
      *
-     * @param changelogDocument     the object containing the set of changes that need to be made
-     * @param filePath path to the file containing the set of changes
+     * @param changelogDocument the object containing the set of changes that need to be made
+     * @param filePath          path to the file containing the set of changes
      */
     private static void writeContentToXmlFile(Document changelogDocument, String filePath) {
         try {

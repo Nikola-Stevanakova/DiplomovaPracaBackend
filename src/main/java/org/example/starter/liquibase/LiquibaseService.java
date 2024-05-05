@@ -3,7 +3,6 @@ package org.example.starter.liquibase;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
-import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
@@ -11,10 +10,8 @@ import org.example.starter.databaseconnector.DatabaseService;
 
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
-public class LiquibaseRunner {
+public class LiquibaseService {
 
     private final DatabaseService databaseRunner = new DatabaseService();
 
@@ -30,12 +27,12 @@ public class LiquibaseRunner {
             Database database = databaseRunner.connectToDatabase();
             Liquibase liquibase = new Liquibase(changelogFilePath, new ClassLoaderResourceAccessor(), database);
 
-            List<ChangeSet> changeSets = liquibase.listUnrunChangeSets(new Contexts());
-
-            if (!changeSets.isEmpty()) {
-                liquibase.update(new Contexts(), new LabelExpression());
-            }
-
+//            List<ChangeSet> changeSets = liquibase.listUnrunChangeSets(new Contexts());
+//
+//            if (!changeSets.isEmpty()) {
+//                liquibase.update(new Contexts(), new LabelExpression());
+//            }
+            liquibase.update(new Contexts(), new LabelExpression());
         } catch (LiquibaseException e) {
             e.printStackTrace();
         }
