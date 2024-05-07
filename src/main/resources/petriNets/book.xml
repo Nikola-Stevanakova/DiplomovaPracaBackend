@@ -1,7 +1,7 @@
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://petriflow.com/petriflow.schema.xsd">
-    <id>person</id>
-    <initials>PRS</initials>
-    <title>Osoba</title>
+    <id>book</id>
+    <initials>BOK</initials>
+    <title>Kniha</title>
     <icon>device_hub</icon>
     <defaultRole>true</defaultRole>
     <anonymousRole>true</anonymousRole>
@@ -13,60 +13,23 @@
     </role>
 
     <data type="text">
-        <id>name</id>
-        <title>Meno</title>
-    </data>
-    <data type="text">
-        <id>surname</id>
-        <title>Priezvisko</title>
-    </data>
-    <data type="text">
-        <id>tel_num</id>
-        <title>Telefónne číslo</title>
-    </data>
-    <data type="button">
-        <id>my_button</id>
-        <title>Pokračovať</title>
+        <id>title</id>
+        <title>Názov</title>
     </data>
 
     <data type="caseRef">
-        <id>vehicle_ids</id>
+        <id>person_ids</id>
         <title/>
         <allowedNets>
-            <allowedNet>vehicle</allowedNet>
+            <allowedNet>person</allowedNet>
         </allowedNets>
-    </data>
-    <data type="caseRef">
-        <id>password_id</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>password</allowedNet>
-        </allowedNets>
-    </data>
-    <data type="caseRef">
-        <id>book_ids</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>book</allowedNet>
-        </allowedNets>
-    </data>
-    <data type="caseRef">
-        <id>classroom_id</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>classroom</allowedNet>
-        </allowedNets>
-    </data>
-    <data type="taskRef">
-        <id>vehicle_forms</id>
-        <title/>
     </data>
 
     <transition>
         <id>t1</id>
         <x>300</x>
         <y>100</y>
-        <label>Osoba</label>
+        <label>Kniha</label>
         <roleRef>
             <id>system</id>
             <logic>

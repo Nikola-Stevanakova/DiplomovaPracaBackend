@@ -2,7 +2,10 @@ package org.example.starter.processes
 
 enum PetriNetsEnum {
     PERSON("person.xml", "person", "Osoba", "PRS"),
-    VEHICLE("vehicle.xml", "vehicle", "Vozidlo", "VHC")
+    VEHICLE("vehicle.xml", "vehicle", "Vozidlo", "VHC"),
+    PASSWORD("password.xml", "password", "Heslo", "PSW"),
+    BOOK("book.xml", "book", "Kniha", "BOK"),
+    CLASSROOM("classroom.xml", "classroom", "Trieda", "CSR")
 
     final String NET_FILE
     final String NET_IDENTIFIER

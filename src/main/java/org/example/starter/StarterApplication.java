@@ -14,8 +14,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-@EnableAsync
-@EnableCaching
+@EnableAsync(proxyTargetClass = true)
+@EnableCaching(proxyTargetClass = true)
 @SpringBootApplication
 @ComponentScan({"com.netgrif.application.engine", "org.example.starter"})
 public class StarterApplication {

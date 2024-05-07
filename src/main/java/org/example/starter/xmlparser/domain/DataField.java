@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.*;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -11,9 +12,8 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "data")
 public class DataField {
     private String id;
-    private String title;
-    private String init;
-    private String placeholder;
     @XmlAttribute(name = "type")
     private String tagName;
+//    @XmlElementRef(name = "allowedNets")
+//    private AllowedNets allowedNets;
 }

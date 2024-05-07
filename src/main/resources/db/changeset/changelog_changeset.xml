@@ -1,1 +1,50 @@
-<?xml version="1.0" encoding="UTF-8"?><databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd"/>
+<?xml version="1.0" encoding="UTF-8"?><databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+    <changeSet author="admin" id="2c0c6c25-e6d8-439f-9a98-a9a501c2c2a7">
+        <createTable tableName="book_person">
+            <column name="book_id" type="uuid"/>
+            <column name="person_id" type="uuid"/>
+        </createTable>
+        <createTable tableName="book">
+            <column name="id" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="title" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="classroom">
+            <column name="id" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="number" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="password">
+            <column name="id" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="person_id" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="person">
+            <column name="id" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="name" type="varchar(255)"/>
+            <column name="surname" type="varchar(255)"/>
+            <column name="tel_num" type="varchar(255)"/>
+            <column name="password_id" type="varchar(255)"/>
+            <column name="classroom_id" type="varchar(255)"/>
+            <column name="vehicle_forms" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="vehicle">
+            <column name="id" type="uuid">
+                <constraints nullable="false" primaryKey="true"/>
+            </column>
+            <column name="type" type="varchar(255)"/>
+            <column name="brand" type="varchar(255)"/>
+            <column name="color" type="varchar(255)"/>
+            <column name="seat_count" type="integer"/>
+            <column name="person_id" type="varchar(255)"/>
+            <column name="person_form" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="admin" id="78936f9d-07ef-4f57-b821-a9159dacbf42"/>
+    <changeSet author="admin" id="b8888109-c66f-4c86-b486-28261ccdffe1"/>
+</databaseChangeLog>

@@ -6,7 +6,6 @@ import org.example.starter.databaseconnector.DatabaseService;
 import org.example.starter.xmlparser.XmlParser;
 import org.example.starter.xmlparser.domain.DataField;
 import org.example.starter.xmlparser.domain.DocumentProcess;
-import org.kie.dmn.feel.util.Pair;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -32,21 +31,21 @@ public class ChangelogGenerator {
 
     public static final HashMap<String, String> DATA_TYPES_MAP = new HashMap<>() {{
         put("number", "integer");
-        put("text", "varchar(255)");
-        put("enumeration", "varchar(255)");
-        put("enumeration_map", "varchar(255)");
+        put("text", "varchar(50)");
+        put("enumeration", "varchar(50)");
+        put("enumeration_map", "varchar(50)");
         put("multichoice", "varchar(255)");
         put("multichoice_map", "varchar(255)");
         put("boolean", "boolean");
         put("date", "date");
         put("dateTime", "timestamp");
-        put("file", "varchar(255)");
+        put("file", "varchar(50)");
         put("fileList", "varchar(255)");
-        put("user", "varchar(255)");
+        put("user", "varchar(50)");
         put("userList", "varchar(255)");
         put("i18n", "varchar(255)");
         put("taskRef", "varchar(255)");
-        put("caseRef", "varchar(255)");
+        put("caseRef", "uuid");
     }};
 
     public static final HashMap<String, String> CONSTRAINTS_PRIMARY_KEY_ATTRIBUTES = new HashMap<>() {{
@@ -131,23 +130,31 @@ public class ChangelogGenerator {
 //                        skontrolujeme ci to nie je caseref
                         if(data.getValue().equals("caseRef")) {
                             String[] dataSplit = data.getKey().split("_");
-//                            vymysliet inak logiku... zabezpecit aby sa bral regex split podla poslendeho znaku
-                            List<DataField> dataFieldList = documentProcessList.stream().filter(documentProcess1 ->
-                                    documentProcess1.getId().equals(dataSplit[0])).map(DocumentProcess::getDataList).findFirst().get();
-                            String firstRelation = data.getKey();
-                            String secondRelation = dataFieldList.stream().filter(dataField -> dataField.getId().equals(documentProcessId + "_id") || dataField.getId().equals(documentProcessId + "_ids")).findFirst().get().getId();
-                            if(firstRelation.contains("_ids") && secondRelation.contains("_ids")) {
+                            String secondDocRelation = "_" + dataSplit[dataSplit.length-1];     //ids
+                            String secondDocProcessId = data.getKey().substring(0,data.getKey().lastIndexOf(secondDocRelation));    //vehicle
 
-                            } else if(firstRelation.contains("_ids") && secondRelation.contains("_id")) {
+                            List<DataField> secondRelationDataFieldList = documentProcessList.stream().filter(secondDoc ->
+                                    secondDoc.getId().equals(secondDocProcessId)).map(DocumentProcess::getDataList).findFirst().get();
 
-                            } else if(firstRelation.contains("_ids") && secondRelation.contains("_ids")) {
+                            String firstDocRelationFull = secondRelationDataFieldList.stream().filter(dataField -> dataField.getId().equals(documentProcessId + "_id") || dataField.getId().equals(documentProcessId + "_ids")).findFirst().get().getId();
+                            String[] firstRelationSplit = firstDocRelationFull.split("_");
+                            String firstDocRelation = "_" + firstRelationSplit[firstRelationSplit.length-1];
 
-                            } else if(firstRelation.contains("_ids") && secondRelation.contains("_ids")){
+                            if(firstDocRelation.equals("_ids") && secondDocRelation.equals("_ids")) {
+                                if(!tableNames.contains(documentProcessId+"_"+secondDocProcessId) && !tableNames.contains(secondDocProcessId+"_"+documentProcessId)) {
+                                    generateCreateJoiningTableElement(changelogDocument, createTableChangeset, documentProcessId, secondDocProcessId);
+                                    checkedTables.add(documentProcessId+"_"+secondDocProcessId);
+                                    checkedTables.add(secondDocProcessId+"_"+documentProcessId);
+                                }
+                            } else if(firstDocRelation.equals("_ids") && secondDocRelation.equals("_id")) {
+                                generateAddColumns(changelogDocument, updateTableChangeset, documentProcessId, data.getKey(), data.getValue());
+                                checkedCols.add(data.getKey());
+//                            } else if(firstDocRelation.equals("_id") && secondDocRelation.equals("_ids")) {
 
+                            } else if(firstDocRelation.equals("_id") && secondDocRelation.equals("_id")){
+                                generateAddColumns(changelogDocument, updateTableChangeset, documentProcessId, data.getKey(), data.getValue());
+                                checkedCols.add(data.getKey());
                             }
-//                            if(!(relationsMap.containsKey() && relationsMap.containsValue(data.getKey())) || !(relationsMap.containsKey(data.getValue()) && relationsMap.containsValue())) {
-//
-//                            }
                         } else {
                             if(dataMapDatabaseSchema.containsKey(data.getKey())){
                                 if(!dataMapDatabaseSchema.get(data.getKey()).equals(DATA_TYPES_MAP.get(data.getValue()))){
@@ -167,7 +174,10 @@ public class ChangelogGenerator {
                         }
                     }
                 } else {
-                    generateCreateTableElement(changelogDocument, createTableChangeset, documentProcess);
+                    List<String> joinTables = generateCreateTableElement(changelogDocument, createTableChangeset, documentProcess, documentProcessList, checkedTables);
+                    if(!joinTables.isEmpty()){
+                        checkedTables.addAll(joinTables);
+                    }
                 }
                 checkedTables.add(documentProcessId);
             }
@@ -226,7 +236,7 @@ public class ChangelogGenerator {
         removeTableChangeset.appendChild(dropTableElement);
     }
 
-    private void generateCreateTableElement(Document changelogDocument, Element changeSetElement, DocumentProcess documentProcess) {
+    private List<String> generateCreateTableElement(Document changelogDocument, Element changeSetElement, DocumentProcess documentProcess, List<DocumentProcess> documentProcessList, List<String> checkedTables) {
         Element createTableElement = changelogDocument.createElement("createTable");
         createTableElement.setAttribute("tableName", documentProcess.getId());
 
@@ -239,16 +249,74 @@ public class ChangelogGenerator {
 
         createTableElement.appendChild(columnIdElement);
 
+        List<String> joinTables = new ArrayList<>();
         for(DataField dataField : documentProcess.getDataList()) {
             if (!dataField.getTagName().equals("button")) {
-                HashMap<String, String> attributes = new HashMap<>(){{
-                    put("name", dataField.getId());
+                if(dataField.getTagName().equals("caseRef")) {
+                    String[] dataSplit = dataField.getId().split("_");
+                    String secondDocRelation = "_" + dataSplit[dataSplit.length-1];     //ids
+                    String secondDocProcessId = dataField.getId().substring(0,dataField.getId().lastIndexOf(secondDocRelation));    //vehicle
+
+                    List<DataField> secondRelationDataFieldList = documentProcessList.stream().filter(secondDoc ->
+                            secondDoc.getId().equals(secondDocProcessId)).map(DocumentProcess::getDataList).findFirst().get();
+
+                    String firstDocRelationFull = secondRelationDataFieldList.stream().filter(df-> df.getId().equals(documentProcess.getId() + "_id") || df.getId().equals(documentProcess.getId() + "_ids")).findFirst().get().getId();
+                    String[] firstRelationSplit = firstDocRelationFull.split("_");
+                    String firstDocRelation = "_" + firstRelationSplit[firstRelationSplit.length-1];
+
+                    if(firstDocRelation.equals("_ids") && secondDocRelation.equals("_ids")) {
+                        if(!checkedTables.contains(documentProcess.getId()+"_"+secondDocProcessId) && !checkedTables.contains(secondDocProcessId+"_"+documentProcess.getId())) {
+                            generateCreateJoiningTableElement(changelogDocument, changeSetElement, documentProcess.getId(), secondDocProcessId);
+                            joinTables.add(documentProcess.getId()+"_"+secondDocProcessId);
+                            joinTables.add(secondDocProcessId+"_"+documentProcess.getId());
+                        }
+                    } else if(firstDocRelation.equals("_ids") && secondDocRelation.equals("_id")) {
+                        HashMap<String, String> attributes = new HashMap<>(){{
+                            put("name", dataField.getId());
 //                TODO: funkcia ktora vrati type na zaklade tagname
-                    put("type", DATA_TYPES_MAP.get(dataField.getTagName()));
-                }};
-                createTableElement.appendChild(createElement(changelogDocument,"column", attributes));
+                            put("type", DATA_TYPES_MAP.get(dataField.getTagName()));
+                        }};
+                        createTableElement.appendChild(createElement(changelogDocument,"column", attributes));
+//                    } else if(firstDocRelation.equals("_id") && secondDocRelation.equals("_ids")) {
+                    } else if(firstDocRelation.equals("_id") && secondDocRelation.equals("_id")){
+                        HashMap<String, String> attributes = new HashMap<>(){{
+                            put("name", dataField.getId());
+//                TODO: funkcia ktora vrati type na zaklade tagname
+                            put("type", DATA_TYPES_MAP.get(dataField.getTagName()));
+                        }};
+                        createTableElement.appendChild(createElement(changelogDocument,"column", attributes));
+                    }
+                } else {
+                    HashMap<String, String> attributes = new HashMap<>(){{
+                        put("name", dataField.getId());
+//                TODO: funkcia ktora vrati type na zaklade tagname
+                        put("type", DATA_TYPES_MAP.get(dataField.getTagName()));
+                    }};
+                    createTableElement.appendChild(createElement(changelogDocument,"column", attributes));
+
+                }
             }
         }
+
+        changeSetElement.appendChild(createTableElement);
+        return joinTables;
+    }
+
+    private void generateCreateJoiningTableElement(Document changelogDocument, Element changeSetElement, String firstProcessId, String secondProcessId ) {
+        Element createTableElement = changelogDocument.createElement("createTable");
+        createTableElement.setAttribute("tableName", firstProcessId+"_"+secondProcessId);
+
+        Element columnFirstIdElement = createElement(changelogDocument,"column", new HashMap<>() {{
+            put("name", firstProcessId+"_id");
+            put("type", "uuid");
+        }});
+        Element columnSecondIdElement = createElement(changelogDocument,"column", new HashMap<>() {{
+            put("name", secondProcessId+"_id");
+            put("type", "uuid");
+        }});
+
+        createTableElement.appendChild(columnFirstIdElement);
+        createTableElement.appendChild(columnSecondIdElement);
 
         changeSetElement.appendChild(createTableElement);
     }
