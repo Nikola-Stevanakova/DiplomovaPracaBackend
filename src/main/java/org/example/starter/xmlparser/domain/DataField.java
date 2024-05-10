@@ -14,6 +14,7 @@ public class DataField {
     private String id;
     @XmlAttribute(name = "type")
     private String tagName;
-//    @XmlElementRef(name = "allowedNets")
-//    private AllowedNets allowedNets;
+    @XmlElementWrapper(name = "allowedNets")
+    @XmlElement(name = "allowedNet")
+    private List<String> allowedNets;
 }

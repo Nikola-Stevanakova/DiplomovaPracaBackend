@@ -5,7 +5,8 @@ enum PetriNetsEnum {
     VEHICLE("vehicle.xml", "vehicle", "Vozidlo", "VHC"),
     PASSWORD("password.xml", "password", "Heslo", "PSW"),
     BOOK("book.xml", "book", "Kniha", "BOK"),
-    CLASSROOM("classroom.xml", "classroom", "Trieda", "CSR")
+    CLASSROOM("classroom.xml", "classroom", "Trieda", "CSR"),
+    MAIN_FORM("main_form.xml", "main_form", "Hlavný formulár", "PMF")
 
     final String NET_FILE
     final String NET_IDENTIFIER

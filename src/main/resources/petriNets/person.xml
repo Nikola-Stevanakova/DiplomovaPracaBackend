@@ -5,7 +5,7 @@
     <icon>device_hub</icon>
     <defaultRole>true</defaultRole>
     <anonymousRole>true</anonymousRole>
-    <transitionRole>true</transitionRole>
+    <transitionRole>false</transitionRole>
 
     <role>
         <id>system</id>
@@ -25,23 +25,29 @@
         <title>Telefónne číslo</title>
     </data>
     <data type="button">
-        <id>my_button</id>
-        <title>Pokračovať</title>
+        <id>add_new_process_button</id>
+		<title/>
+		<placeholder>Nahraj novú verziu siete</placeholder>
+		<component>
+			<name>stroked</name>
+		</component>
+		<event type="set">
+			<id>add_new_process_set</id>
+			<actions phase="post">
+				<action>
+					updateOrInsert()
+				</action>
+			</actions>
+		</event>
     </data>
 
     <data type="caseRef">
-        <id>vehicle_ids</id>
+        <id>vehicle_id</id>
         <title/>
         <allowedNets>
             <allowedNet>vehicle</allowedNet>
-        </allowedNets>
-    </data>
-    <data type="caseRef">
-        <id>password_id</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>password</allowedNet>
-        </allowedNets>
+			<allowedNet>password</allowedNet>
+		</allowedNets>
     </data>
     <data type="caseRef">
         <id>book_ids</id>
@@ -57,8 +63,22 @@
             <allowedNet>classroom</allowedNet>
         </allowedNets>
     </data>
+	<data type="file">
+		<id>new_process_version</id>
+		<title/>
+	</data>
+	<data type="i18n">
+		<id>book_list_header</id>
+		<title/>
+		<init>Zoznam kníh</init>
+	</data>
+	<data type="i18n">
+		<id>vehicle_header</id>
+		<title/>
+		<init>Vozidlo</init>
+	</data>
     <data type="taskRef">
-        <id>vehicle_forms</id>
+		<id>vehicle_form</id>
         <title/>
     </data>
 
@@ -77,6 +97,111 @@
             <id>t1_0</id>
             <cols>4</cols>
             <layout>grid</layout>
+			<dataRef>
+				<id>name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>surname</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>add_new_process_button</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>6</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>new_process_version</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>6</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>tel_num</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>book_list_header</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+				<component>
+					<name>divider</name>
+				</component>
+			</dataRef>
+			<dataRef>
+				<id>vehicle_header</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+				<component>
+					<name>divider</name>
+				</component>
+			</dataRef>
+
         </dataGroup>
         <event type="assign">
             <id>t1_assign</id>

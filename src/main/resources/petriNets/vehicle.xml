@@ -5,7 +5,7 @@
     <icon>device_hub</icon>
     <defaultRole>true</defaultRole>
     <anonymousRole>true</anonymousRole>
-    <transitionRole>true</transitionRole>
+    <transitionRole>false</transitionRole>
 
     <role>
         <id>system</id>
@@ -20,7 +20,7 @@
             <option key="Combi">Combi</option>
             <option key="Hatchback">Hatchback</option>
         </options>
-        <init>SUV</init>
+		<init>SUV</init>
     </data>
     <data type="enumeration">
         <id>brand</id>
@@ -30,14 +30,17 @@
             <option key="Mercedes">Mercedes</option>
             <option key="Audi">Audi</option>
         </options>
+		<init>Škoda</init>
     </data>
     <data type="text">
         <id>color</id>
         <title>Farba</title>
+		<init>biela</init>
     </data>
     <data type="number">
         <id>seat_count</id>
         <title>Počet miest (bez vodiča)</title>
+		<init>1</init>
     </data>
 
     <data type="caseRef">
@@ -50,6 +53,13 @@
     <data type="taskRef">
         <id>person_form</id>
         <title/>
+    </data>
+    <data type="caseRef">
+        <id>main_form_id</id>
+        <title/>
+        <allowedNets>
+            <allowedNet>main_form</allowedNet>
+        </allowedNets>
     </data>
 
     <transition>
@@ -65,8 +75,64 @@
         </roleRef>
         <dataGroup>
             <id>t1_0</id>
-            <cols>6</cols>
+			<cols>4</cols>
             <layout>grid</layout>
+			<dataRef>
+				<id>brand</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>type</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>color</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>seat_count</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
         </dataGroup>
         <event type="assign">
             <id>t1_assign</id>

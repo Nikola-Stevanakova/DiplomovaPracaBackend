@@ -18,9 +18,9 @@ class CustomRunner extends AbstractOrderedCommandLineRunner {
     void run(String... args) throws Exception {
         log.info("Calling custom runner");
         ChangelogGenerator changelogGenerator = new ChangelogGenerator()
-        boolean result = changelogGenerator.generateChangelogFile()
-        if(result){
-            liquibaseService.runLiquibase()
-        }
+//        boolean result = changelogGenerator.generateChangelogFile()
+//        if(result){
+//            liquibaseService.runLiquibase()
+//        }
     }
 }
