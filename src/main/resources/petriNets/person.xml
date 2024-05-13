@@ -7,54 +7,42 @@
     <anonymousRole>true</anonymousRole>
     <transitionRole>false</transitionRole>
 
+	<caseEvents>
+		<event type="create">
+			<id>main_form_create_vehicle_case</id>
+			<actions phase="post">
+				<action>
+					vehicle_ids: f.vehicle_ids,
+					vehicle_form: f.vehicle_form;
+
+					def vehicleCase = createCase("vehicle")
+					String taskId = vehicleCase.tasks.find { it.transition == "t1" }.task
+
+					change vehicle_ids value { [vehicleCase.stringId] }
+					change vehicle_form value { [taskId] }
+				</action>
+			</actions>
+		</event>
+	</caseEvents>
+
     <role>
         <id>system</id>
         <title>System</title>
     </role>
-
     <data type="text">
         <id>name</id>
         <title>Meno</title>
     </data>
     <data type="text">
-        <id>surname</id>
-        <title>Priezvisko</title>
-    </data>
-    <data type="text">
-        <id>tel_num</id>
+        <id>telephone_number</id>
         <title>Telefónne číslo</title>
     </data>
-    <data type="button">
-        <id>add_new_process_button</id>
-		<title/>
-		<placeholder>Nahraj novú verziu siete</placeholder>
-		<component>
-			<name>stroked</name>
-		</component>
-		<event type="set">
-			<id>add_new_process_set</id>
-			<actions phase="post">
-				<action>
-					updateOrInsert()
-				</action>
-			</actions>
-		</event>
-    </data>
-
     <data type="caseRef">
-        <id>vehicle_id</id>
+        <id>vehicle_ids</id>
         <title/>
         <allowedNets>
             <allowedNet>vehicle</allowedNet>
-			<allowedNet>password</allowedNet>
 		</allowedNets>
-    </data>
-    <data type="caseRef">
-        <id>book_ids</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>book</allowedNet>
-        </allowedNets>
     </data>
     <data type="caseRef">
         <id>classroom_id</id>
@@ -63,25 +51,100 @@
             <allowedNet>classroom</allowedNet>
         </allowedNets>
     </data>
-	<data type="file">
-		<id>new_process_version</id>
+	<data type="taskRef">
+		<id>vehicle_form</id>
 		<title/>
 	</data>
-	<data type="i18n">
-		<id>book_list_header</id>
+	<data type="number">
+		<id>sequence_number</id>
+		<title>Poradové číslo</title>
+	</data>
+	<data type="file">
+		<id>document_file</id>
 		<title/>
-		<init>Zoznam kníh</init>
+	</data>
+	<data type="date">
+		<id>date_of_registration</id>
+		<title>Dátum registrácie</title>
+	</data>
+	<data type="boolean">
+		<id>request_submitted</id>
+		<title>Podaná žiadosť</title>
+		<init>false</init>
+	</data>
+	<data type="enumeration">
+		<id>nationality_enumeration</id>
+		<title>Národnosť (enumerácia)</title>
+		<options>
+			<option key="slovenská ">slovenská </option>
+			<option key="maďarská">maďarská</option>
+			<option key="ukrajinská">ukrajinská</option>
+		</options>
+	</data>
+	<data type="enumeration_map">
+		<id>nationality_enumeration_map</id>
+		<title>Národnosť (enumeračná mapa)</title>
+		<options>
+			<option key="s">slovenská</option>
+			<option key="m">maďarská </option>
+			<option key="u">ukrajinská</option>
+		</options>
+	</data>
+	<data type="multichoice">
+		<id>subjects</id>
+		<title>Predmety (multichoice)</title>
+		<options>
+			<option key="slovenský jazyk">slovenský jazyk</option>
+			<option key="matematika">matematika</option>
+			<option key="fyzika">fyzika</option>
+		</options>
+	</data>
+	<data type="multichoice_map">
+		<id>subjects_map</id>
+		<title>Predmety(multichoice mapa)</title>
+		<options>
+			<option key="sj">slovenský jazyk</option>
+			<option key="ma">matematika</option>
+			<option key="fy">fyzika</option>
+		</options>
 	</data>
 	<data type="i18n">
 		<id>vehicle_header</id>
 		<title/>
 		<init>Vozidlo</init>
 	</data>
-    <data type="taskRef">
-		<id>vehicle_form</id>
-        <title/>
-    </data>
-
+	<data type="button">
+		<id>remove_from_database</id>
+		<title/>
+		<placeholder>Odstrániť formulár</placeholder>
+		<component>
+			<name>flat</name>
+		</component>
+		<event type="set">
+			<id>remove_from_database_set</id>
+			<actions phase="post">
+				<action>
+					removeFromDatabase()
+				</action>
+			</actions>
+		</event>
+	</data>
+	<data type="button">
+		<id>update_form_button</id>
+		<title/>
+		<placeholder>Aktualizovať formulár</placeholder>
+		<component>
+			<name>stroked</name>
+		</component>
+		<event type="set">
+			<id>update_form_button_set</id>
+			<actions phase="post">
+				<action>
+					updateOrInsert()
+				</action>
+			</actions>
+		</event>
+	</data>
     <transition>
         <id>t1</id>
         <x>300</x>
@@ -112,7 +175,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>surname</id>
+				<id>telephone_number</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -126,35 +189,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>add_new_process_button</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>6</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>new_process_version</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>6</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>tel_num</id>
+				<id>sequence_number</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -168,13 +203,97 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>book_list_header</id>
+				<id>document_file</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>date_of_registration</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>request_submitted</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>nationality_enumeration</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>nationality_enumeration_map</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>vehicle_form</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>6</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>vehicle_header</id>
 				<logic>
 					<behavior>visible</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>4</y>
+					<y>5</y>
 					<rows>1</rows>
 					<cols>4</cols>
 					<template>material</template>
@@ -185,23 +304,33 @@
 				</component>
 			</dataRef>
 			<dataRef>
-				<id>vehicle_header</id>
+				<id>remove_from_database</id>
 				<logic>
-					<behavior>visible</behavior>
+					<behavior>editable</behavior>
 				</logic>
 				<layout>
-					<x>0</x>
-					<y>2</y>
+					<x>2</x>
+					<y>7</y>
 					<rows>1</rows>
-					<cols>4</cols>
+					<cols>1</cols>
 					<template>material</template>
 					<appearance>outline</appearance>
 				</layout>
-				<component>
-					<name>divider</name>
-				</component>
 			</dataRef>
-
+			<dataRef>
+				<id>update_form_button</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>7</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
         </dataGroup>
         <event type="assign">
             <id>t1_assign</id>

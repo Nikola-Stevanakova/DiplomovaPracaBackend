@@ -16,22 +16,16 @@ public class LiquibaseService {
     private final DatabaseService databaseRunner = new DatabaseService();
 
     /**
-     * The method creates a connection to the database, makes changes on the database using Liquibase
+     * The method gets a connection to the database, makes changes on the database using Liquibase
      * and the set of changes defined in the changelog file.
      */
     public void runLiquibase() {
-//        String changelogFilePath = liquibaseProperties.getChangeLogFile();
         String changelogFilePath = "/db/changelog.xml";
 
         try {
             Database database = databaseRunner.connectToDatabase();
             Liquibase liquibase = new Liquibase(changelogFilePath, new ClassLoaderResourceAccessor(), database);
 
-//            List<ChangeSet> changeSets = liquibase.listUnrunChangeSets(new Contexts());
-//
-//            if (!changeSets.isEmpty()) {
-//                liquibase.update(new Contexts(), new LabelExpression());
-//            }
             liquibase.update(new Contexts(), new LabelExpression());
         } catch (LiquibaseException e) {
             e.printStackTrace();

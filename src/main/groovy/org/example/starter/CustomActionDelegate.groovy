@@ -2,14 +2,11 @@ package org.example.starter
 
 import com.netgrif.application.engine.petrinet.domain.dataset.logic.action.ActionDelegate
 import com.netgrif.application.engine.workflow.domain.Case
-import liquibase.database.Database
-import org.bson.types.ObjectId
+
 import org.example.starter.databaseconnector.DatabaseService
 import org.springframework.stereotype.Component
 
-import java.nio.ByteBuffer
 import java.sql.Connection
-import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -35,7 +32,6 @@ class CustomActionDelegate extends ActionDelegate {
         def sql = "INSERT INTO " + tableName + " ( name) " + "VALUES(?)"
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-//            statement.setString(2, useCase.dataSet["name"].value.toString())
             statement.addBatch();
             statement.executeUpdate();
 
@@ -44,39 +40,43 @@ class CustomActionDelegate extends ActionDelegate {
         }
     }
 
-    void createPersonProcessInstanceInTable(Connection connection , Case processInstance) {
+    void createPersonProcessInstanceInTable(Connection connection, Case processInstance) {
         System.out.println("Idem robiť insert")
-
-//        def sql = "INSERT INTO" + processInstance.processIdentifier + "(id, title, enumeration_select, enumeration_map_select, multichoice_select, multichoice_map_select, count_select,  " +
-//                "boolean_field, date_select, date_time_select, file_select, file_list_select, user_select, user_list_select, vehicle_header) " + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-
-        def sql = "INSERT INTO " + processInstance.processIdentifier + " (id, title, count_select,  " +
-                "boolean_field, date_select, date_time_select, file_select, vehicle_header) " + "VALUES(?,?,?,?,?,?,?,?)"
+        def sql = "INSERT INTO " + processInstance.processIdentifier + " (id, telephone_number,  " +
+                "sequence_number, document_file, date_of_registration, request_submitted, nationality_enumeration, vehicle_header) " + "VALUES(?,?,?,?,?,?,?,?)"
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, processInstance.stringId)
-            statement.setString(2, processInstance.getDataField("title").toString())
+            statement.setString(2, processInstance.getDataField("telephone_number").toString())
 
-//            statement.setString(3, processInstance.getDataField("enumeration_select").toString())
-//            statement.setString(4, processInstance.getDataField("enumeration_map_select").toString())
-//            statement.setString(5, processInstance.getDataField("multichoice_select").toString())
-//            statement.setString(6, processInstance.getDataField("multichoice_map_select").toString())
-
-            statement.setInt(3, processInstance.getDataField("count_select").value as int)
-            statement.setBoolean(4, processInstance.getDataField("boolean_field").value as boolean)
-            statement.setDate(5, new java.sql.Date((processInstance.getDataField("date_select").value as java.util.Date).getTime()))
-            statement.setTimestamp(6, new java.sql.Timestamp((processInstance.getDataField("date_time_select").value as java.util.Date).getTime()))
-            statement.setString(7, processInstance.getDataField("file_select").toString())
-
-//            statement.setArray(12, processInstance.getDataField("file_list_select").value.namesPaths as List)
-//            statement.setString(13, processInstance.getDataField("user_select").toString())
+            statement.setInt(3, processInstance.getDataField("sequence_number").value as int)
+            statement.setString(4, processInstance.getDataField("document_file").toString())
+            statement.setDate(5, new java.sql.Date((processInstance.getDataField("date_of_registration").value as java.util.Date).getTime()))
+            statement.setBoolean(6, processInstance.getDataField("request_submitted").value as boolean)
+            statement.setString(7, processInstance.getDataField("nationality_enumeration").value.toString())
             statement.setString(8, processInstance.getDataField("vehicle_header").toString())
+
             statement.addBatch()
             statement.executeUpdate()
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        Case vehicleCase = workflowService.findOne(processInstance.dataSet["vehicle_ids"].value[0].toString())
+        def sqlVehicle = "INSERT INTO vehicle (id, person_id, registration_date_time) " + "VALUES(?,?,?)"
+
+        try (PreparedStatement statement = connection.prepareStatement(sqlVehicle)) {
+            statement.setString(1, processInstance.dataSet["vehicle_ids"].value[0].toString())
+            statement.setString(2, processInstance.stringId)
+            statement.setTimestamp(3, new java.sql.Timestamp((vehicleCase.getDataField("registration_date_time").value as java.util.Date).getTime()))
+            statement.addBatch()
+            statement.executeUpdate()
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
 
     }
 

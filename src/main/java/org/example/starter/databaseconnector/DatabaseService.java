@@ -13,14 +13,6 @@ import java.util.*;
 @Service
 public class DatabaseService {
 
-//    @Autowired
-//    private DatabaseProperties databaseProperties;
-
-//    @Autowired
-//    private LiquibaseProperties liquibaseProperties;
-
-    //    @Autowired
-//    private XmlProperties xmlProperties;
     private final static String TABLE_LABEL = "TABLE_NAME";
     private final static String COLUMN_LABEL = "COLUMN_NAME";
     private final static String TYPE_LABEL = "TYPE_NAME";
@@ -35,10 +27,6 @@ public class DatabaseService {
      * The method connects and return database.
      */
     public Database connectToDatabase() {
-//        String databaseUrl = databaseProperties.getUrl();
-//        String databaseUsername = databaseProperties.getUsername();
-//        String databasePassword = databaseProperties.getPassword();
-
         try {
             Connection connection = DriverManager.getConnection(databaseUrl, databaseUsername, databasePassword);
 

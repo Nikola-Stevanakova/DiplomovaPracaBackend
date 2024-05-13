@@ -1,6 +1,5 @@
 package org.example.starter.changeloggenerator;
 
-import com.netgrif.application.engine.elastic.service.ElasticCaseService;
 import org.example.starter.databaseconnector.domain.DatabaseSchema;
 import org.example.starter.databaseconnector.DatabaseService;
 import org.example.starter.xmlparser.XmlParser;
@@ -55,11 +54,6 @@ public class ChangelogGenerator {
 
     private final DatabaseService databaseService = new DatabaseService();
     private final XmlParser xmlParser = new XmlParser();
-    private final ElasticCaseService elasticCaseService;
-
-    public ChangelogGenerator(ElasticCaseService elasticCaseService) {
-        this.elasticCaseService = elasticCaseService;
-    }
 
     /**
      * The method gets and compares the database schema and xml files and runs a function to generate the changeset.
@@ -88,7 +82,10 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method compares a list of database schemas with a list of document processes in order to synchronize the database schema with the processes defined in the documents.
+     *
+     * @param databaseSchemaList  list of database tables
+     * @param documentProcessList list of processes
      */
     private boolean compareDatabaseSchemaAndProcesses(List<DatabaseSchema> databaseSchemaList, List<DocumentProcess> documentProcessList) {
         try {
@@ -149,7 +146,6 @@ public class ChangelogGenerator {
                                         tableNames.add(allowedNet + "_" + documentProcessId);
                                     }
                                 } else if (processInRelationRelationType.equals("_id")) {
-//                                    foreign key
                                     if (!dataMapDatabaseSchema.containsKey(allowedNet + "_id")) {
                                         generateAddColumns(changelogDocument, updateTableChangeset, documentProcessId, allowedNet + "_id", columnType);
                                         generateForeignKeyToExistingTable(changelogDocument, addForeignKeysTableChangeset, documentProcessId, allowedNet);
@@ -199,7 +195,12 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method creates an XML element representing the dropping of a column from a database table.
+     *
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param updateTableChangeset reference to the changeSet element to which the new change is to be added
+     * @param documentProcessId identifier of the document process or table to which the column will be added
+     * @param dataName name of the new column being added
      */
     private void generateDropColumn(Document changelogDocument, Element updateTableChangeset, String documentProcessId, String dataName) {
         Element dropColumnElement = changelogDocument.createElement("dropColumn");
@@ -216,7 +217,13 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method generates an XML element representing the addition of a new column to an existing table in a database schema.
+     *
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param updateTableChangeset reference to the changeSet element to which the new change is to be added
+     * @param documentProcessId identifier of the document process or table to which the column will be added
+     * @param dataName name of the new column being added
+     * @param dataType data type of the new column being added
      */
     private void generateAddColumns(Document changelogDocument, Element updateTableChangeset, String documentProcessId, String dataName, String dataType) {
         Element addColumnElement = changelogDocument.createElement("addColumn");
@@ -234,7 +241,11 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method generates an XML element representing the removal of a table from a database schema.
+     *
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param removeTableChangeset reference to the changeSet element to which the new change is to be added
+     * @param databaseSchemaTableName name of the table to be dropped from the database schema
      */
     private void generateDropTable(Document changelogDocument, Element removeTableChangeset, String databaseSchemaTableName) {
         Element dropTableElement = changelogDocument.createElement("dropTable");
@@ -245,7 +256,14 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method handles the creation of an XML element representing the creation of a new table in a database schema.
+     *
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param changeSetElement XML element representing a changeset within the change log, where the table creation operation will be appended
+     * @param addForeignKeysTableChangeset The XML element representing a changeset within the change log, where foreign key additions for the new table will be appended
+     * @param documentProcess document process for which the table is being created
+     * @param documentProcessList list of document processes, likely containing information about relationships between different processes
+     * @param tableNames list containing the names of existing tables in the database schema
      */
     private List<String> generateCreateTableElement(Document changelogDocument, Element changeSetElement, Element addForeignKeysTableChangeset, DocumentProcess documentProcess, List<DocumentProcess> documentProcessList, List<String> tableNames) {
         String documentProcessId = documentProcess.getId();
@@ -263,14 +281,14 @@ public class ChangelogGenerator {
 
         List<String> joinTables = new ArrayList<>();
         for (DataField dataField : documentProcess.getDataList()) {
-            String columnName = dataField.getId();  // data.getKey();
-            String columnType = dataField.getTagName(); // data.getValue();
+            String columnName = dataField.getId();
+            String columnType = dataField.getTagName();
             List<String> allowedNets = dataField.getAllowedNets();
 
             if (!columnType.equals("button")) {
                 if (columnType.equals("caseRef")) {
                     String[] dataSplit = columnName.split("_");
-                    String processInRelationRelationType = "_" + dataSplit[dataSplit.length - 1];     //_ids/id
+                    String processInRelationRelationType = "_" + dataSplit[dataSplit.length - 1];
 
                     for (String allowedNet : allowedNets) {
                         List<DataField> processInRelationDataFieldList = documentProcessList.stream().filter(processInRelation -> processInRelation.getId().equals(allowedNet)).map(DocumentProcess::getDataList).findFirst().get();
@@ -287,8 +305,6 @@ public class ChangelogGenerator {
                                 joinTables.add(allowedNet + "_" + documentProcessId);
                             }
                         } else if (processInRelationRelationType.equals("_id")) {
-//                                    foreign key
-//                            createTableElement.appendChild(generateForeignKeyColumn(changelogDocument, allowedNet));
                             HashMap<String, String> attributes = new HashMap<>() {{
                                 put("name", allowedNet + "_id");
                                 put("type", DATA_TYPES_MAP.get(columnType));
@@ -303,7 +319,6 @@ public class ChangelogGenerator {
                         put("type", DATA_TYPES_MAP.get(columnType));
                     }};
                     createTableElement.appendChild(createElement(changelogDocument, "column", attributes));
-
                 }
             }
         }
@@ -313,9 +328,12 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method generates an XML element representing the addition of a foreign key constraint to an existing table in a database schema
      *
      * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param addForeignKeysTableChangeset  XML element representing a changeset within the change log, where the addition of foreign key constraint operation will be appended
+     * @param baseTableName name of the table to which the foreign key constraint will be added
+     * @param referencedColumnName name of the column in the referenced table
      */
     private void generateForeignKeyToExistingTable(Document changelogDocument, Element addForeignKeysTableChangeset, String baseTableName, String referencedColumnName) {
         Element addForeignKeyElement = changelogDocument.createElement("addForeignKeyConstraint");
@@ -328,9 +346,12 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method generates an XML element representing the creation of a joining table in a database schema.
      *
      * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param changeSetElement XML element representing a changeset within the change log, where the create table operation for the joining table will be appended
+     * @param firstProcessId  identifier of the first document process or table participating in the relationship
+     * @param secondProcessId identifier of the second document process or table participating in the relationship
      */
     private void generateCreateJoiningTableElement(Document changelogDocument, Element changeSetElement, String firstProcessId, String secondProcessId) {
         Element createTableElement = changelogDocument.createElement("createTable");
@@ -343,18 +364,20 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method calls method that generates an XML element representing a column ID within a database table.
      *
      * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param processId id of process
      */
     private Element generateForeignKeyColumn(Document changelogDocument, String processId) {
         return createColumnIdElement(changelogDocument, processId);
     }
 
     /**
-     * The method
+     * The method generates an XML element representing a column ID within a database table.
      *
      * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param processId id of process
      */
     private Element createColumnIdElement(Document changelogDocument, String processId) {
         return createElement(changelogDocument, "column", new HashMap<>() {{
@@ -388,7 +411,11 @@ public class ChangelogGenerator {
     }
 
     /**
-     * The method
+     * The method is a utility function for generating XML elements within the context of a given XML document.
+     *
+     * @param changelogDocument reference to the document to which the new include element is to be added
+     * @param tagName name of the XML element to be created
+     * @param attributes HashMap containing attribute-value pairs for the XML element
      */
     private Element createElement(Document changelogDocument, String tagName, HashMap<String, String> attributes) {
         Element element = changelogDocument.createElement(tagName);

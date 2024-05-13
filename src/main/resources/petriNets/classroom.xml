@@ -31,12 +31,23 @@
             <allowedNet>book</allowedNet>
         </allowedNets>
     </data>
-
+	<data type="user">
+		<id>user_1</id>
+		<title/>
+	</data>
+	<data type="userList">
+		<id>student_list</id>
+		<title>Zoznam študentov</title>
+	</data>
+	<data type="user">
+		<id>profesor</id>
+		<title>Profesor</title>
+	</data>
     <transition>
         <id>t1</id>
         <x>300</x>
         <y>100</y>
-        <label>Osoba</label>
+		<label>Trieda</label>
         <roleRef>
             <id>system</id>
             <logic>
@@ -54,6 +65,34 @@
 				</logic>
 				<layout>
 					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>student_list</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>profesor</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
 					<y>0</y>
 					<rows>1</rows>
 					<cols>2</cols>

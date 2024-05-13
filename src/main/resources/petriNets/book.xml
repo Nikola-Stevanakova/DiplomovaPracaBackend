@@ -6,25 +6,14 @@
     <defaultRole>true</defaultRole>
     <anonymousRole>true</anonymousRole>
     <transitionRole>false</transitionRole>
-
     <role>
         <id>system</id>
         <title>System</title>
     </role>
-
     <data type="text">
         <id>title</id>
         <title>Názov</title>
     </data>
-
-    <data type="caseRef">
-        <id>person_ids</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>person</allowedNet>
-        </allowedNets>
-    </data>
-
     <data type="caseRef">
         <id>classroom_ids</id>
         <title/>
@@ -32,15 +21,6 @@
             <allowedNet>classroom</allowedNet>
         </allowedNets>
     </data>
-
-    <data type="caseRef">
-        <id>classroom_ids</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>classroom</allowedNet>
-        </allowedNets>
-    </data>
-
     <transition>
         <id>t1</id>
         <x>300</x>
