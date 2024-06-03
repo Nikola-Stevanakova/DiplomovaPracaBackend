@@ -16,13 +16,6 @@
         <id>number</id>
         <title>číslo</title>
     </data>
-    <data type="caseRef">
-        <id>book_id</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>book</allowedNet>
-        </allowedNets>
-    </data>
 	<data type="userList">
 		<id>student_list</id>
 		<title>Zoznam študentov</title>
@@ -38,6 +31,13 @@
         <title/>
         <allowedNets>
             <allowedNet>person</allowedNet>
+        </allowedNets>
+    </data>
+    <data type="caseRef">
+        <id>book_id</id>
+        <title/>
+        <allowedNets>
+            <allowedNet>book</allowedNet>
         </allowedNets>
     </data>
 
