@@ -6,26 +6,28 @@
     <defaultRole>true</defaultRole>
     <anonymousRole>true</anonymousRole>
     <transitionRole>false</transitionRole>
+
     <role>
         <id>system</id>
         <title>System</title>
     </role>
+
     <data type="enumeration">
         <id>type</id>
         <title>Typ</title>
         <options>
-            <option key="SUV">SUV</option>
-            <option key="Combi">Combi</option>
-            <option key="Hatchback">Hatchback</option>
+            <option key="suv">SUV</option>
+            <option key="combi">Combi</option>
+            <option key="hatchback">Hatchback</option>
         </options>
     </data>
     <data type="enumeration">
         <id>brand</id>
         <title>Značka</title>
         <options>
-            <option key="Škoda">Škoda</option>
-            <option key="Mercedes">Mercedes</option>
-            <option key="Audi">Audi</option>
+            <option key="skoda">Škoda</option>
+            <option key="mercedes">Mercedes</option>
+            <option key="audi">Audi</option>
         </options>
     </data>
     <data type="text">
@@ -36,17 +38,6 @@
         <id>seat_count</id>
         <title>Počet miest (bez vodiča)</title>
     </data>
-    <data type="caseRef">
-        <id>person_id</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>person</allowedNet>
-        </allowedNets>
-    </data>
-    <data type="taskRef">
-        <id>person_form</id>
-        <title/>
-    </data>
 	<data type="dateTime">
 		<id>registration_date_time</id>
 		<title>Dátum a čas registrácie vozidla</title>
@@ -55,6 +46,17 @@
 		<id>file_list</id>
 		<title>Zoznam dokumentov</title>
 	</data>
+    <data type="caseRef">
+        <id>person_ids</id>
+        <title/>
+        <allowedNets>
+            <allowedNet>person</allowedNet>
+        </allowedNets>
+    </data>
+    <data type="taskRef">
+        <id>person_forms</id>
+        <title/>
+    </data>
     <transition>
         <id>t1</id>
         <x>220</x>

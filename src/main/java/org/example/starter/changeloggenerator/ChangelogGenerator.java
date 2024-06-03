@@ -32,9 +32,9 @@ public class ChangelogGenerator {
         put("number", "numeric");
         put("text", "varchar(255)");
         put("enumeration", "varchar(255)");
-        put("enumeration_map", "varchar(255)");
-        put("multichoice", "varchar(255) ARRAY");
-        put("multichoice_map", "varchar(255) ARRAY");
+        put("enumeration_map", "hstore");
+        put("multichoice", "hstore");
+        put("multichoice_map", "hstore ARRAY");
         put("boolean", "boolean");
         put("date", "date");
         put("dateTime", "timestamp");
@@ -249,6 +249,7 @@ public class ChangelogGenerator {
      */
     private void generateDropTable(Document changelogDocument, Element removeTableChangeset, String databaseSchemaTableName) {
         Element dropTableElement = changelogDocument.createElement("dropTable");
+        dropTableElement.setAttribute("cascadeConstraints", "true");
         dropTableElement.setAttribute("schemaName", "public");
         dropTableElement.setAttribute("tableName", databaseSchemaTableName);
 

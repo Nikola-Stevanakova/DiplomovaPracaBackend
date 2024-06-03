@@ -6,16 +6,18 @@
     <defaultRole>true</defaultRole>
     <anonymousRole>true</anonymousRole>
     <transitionRole>false</transitionRole>
+
     <role>
         <id>system</id>
         <title>System</title>
     </role>
+
     <data type="text">
         <id>title</id>
         <title>Názov</title>
     </data>
     <data type="caseRef">
-        <id>classroom_ids</id>
+        <id>classroom_id</id>
         <title/>
         <allowedNets>
             <allowedNet>classroom</allowedNet>

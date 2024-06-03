@@ -13,13 +13,13 @@
 			<actions phase="post">
 				<action>
 					vehicle_ids: f.vehicle_ids,
-					vehicle_form: f.vehicle_form;
+					vehicle_forms: f.vehicle_forms;
 
 					def vehicleCase = createCase("vehicle")
 					String taskId = vehicleCase.tasks.find { it.transition == "t1" }.task
 
 					change vehicle_ids value { [vehicleCase.stringId] }
-					change vehicle_form value { [taskId] }
+					change vehicle_forms value { [taskId] }
 				</action>
 			</actions>
 		</event>
@@ -30,7 +30,7 @@
         <title>System</title>
     </role>
     <data type="text">
-        <id>name</id>
+        <id>person_name</id>
         <title>Meno</title>
     </data>
     <data type="text">
@@ -52,7 +52,7 @@
         </allowedNets>
     </data>
 	<data type="taskRef">
-		<id>vehicle_form</id>
+		<id>vehicle_forms</id>
 		<title/>
 	</data>
 	<data type="number">
@@ -76,25 +76,25 @@
 		<id>nationality_enumeration</id>
 		<title>Národnosť (enumerácia)</title>
 		<options>
-			<option key="slovenská ">slovenská </option>
-			<option key="maďarská">maďarská</option>
-			<option key="ukrajinská">ukrajinská</option>
+			<option key="slovenska">slovenská </option>
+			<option key="madarska">maďarská</option>
+			<option key="ukrajinska">ukrajinská</option>
 		</options>
 	</data>
 	<data type="enumeration_map">
 		<id>nationality_enumeration_map</id>
 		<title>Národnosť (enumeračná mapa)</title>
 		<options>
-			<option key="s">slovenská</option>
-			<option key="m">maďarská </option>
-			<option key="u">ukrajinská</option>
+			<option key="slovenska">slovenská</option>
+			<option key="madarska">maďarská </option>
+			<option key="ukrajinska">ukrajinská</option>
 		</options>
 	</data>
 	<data type="multichoice">
 		<id>subjects</id>
 		<title>Predmety (multichoice)</title>
 		<options>
-			<option key="slovenský jazyk">slovenský jazyk</option>
+			<option key="slovensky_jazyk">slovenský jazyk</option>
 			<option key="matematika">matematika</option>
 			<option key="fyzika">fyzika</option>
 		</options>
@@ -161,7 +161,7 @@
             <cols>4</cols>
             <layout>grid</layout>
 			<dataRef>
-				<id>name</id>
+				<id>person_name</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -273,7 +273,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>vehicle_form</id>
+				<id>vehicle_forms</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -327,6 +327,34 @@
 					<y>7</y>
 					<rows>1</rows>
 					<cols>1</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>subjects</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>subjects_map</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>4</y>
+					<rows>1</rows>
+					<cols>2</cols>
 					<template>material</template>
 					<appearance>outline</appearance>
 				</layout>
