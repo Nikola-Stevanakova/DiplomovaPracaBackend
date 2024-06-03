@@ -84,20 +84,6 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
-			<dataRef>
-				<id>profesor</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
         </dataGroup>
         <event type="assign">
             <id>t1_assign</id>
