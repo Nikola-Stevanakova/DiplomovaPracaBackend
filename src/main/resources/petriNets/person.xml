@@ -29,6 +29,7 @@
         <id>system</id>
         <title>System</title>
     </role>
+
     <data type="text">
         <id>person_name</id>
         <title>Meno</title>
@@ -36,20 +37,6 @@
     <data type="text">
         <id>telephone_number</id>
         <title>Telefónne číslo</title>
-    </data>
-    <data type="caseRef">
-        <id>vehicle_ids</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>vehicle</allowedNet>
-		</allowedNets>
-    </data>
-    <data type="caseRef">
-        <id>classroom_id</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>classroom</allowedNet>
-        </allowedNets>
     </data>
 	<data type="taskRef">
 		<id>vehicle_forms</id>
@@ -113,6 +100,23 @@
 		<title/>
 		<init>Vozidlo</init>
 	</data>
+
+	<!-- ASSOCIATION -->
+	<data type="caseRef">
+		<id>vehicle_ids</id>
+		<title/>
+		<allowedNets>
+			<allowedNet>vehicle</allowedNet>
+		</allowedNets>
+	</data>
+	<data type="caseRef">
+		<id>classroom_id</id>
+		<title/>
+		<allowedNets>
+			<allowedNet>classroom</allowedNet>
+		</allowedNets>
+	</data>
+
 	<data type="button">
 		<id>remove_from_database</id>
 		<title/>

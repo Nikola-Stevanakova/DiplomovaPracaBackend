@@ -16,6 +16,8 @@
         <id>title</id>
         <title>Názov</title>
     </data>
+
+    <!-- ASSOCIATION -->
     <data type="caseRef">
         <id>classroom_id</id>
         <title/>
@@ -23,6 +25,7 @@
             <allowedNet>classroom</allowedNet>
         </allowedNets>
     </data>
+
     <transition>
         <id>t1</id>
         <x>300</x>

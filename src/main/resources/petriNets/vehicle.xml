@@ -46,6 +46,12 @@
 		<id>file_list</id>
 		<title>Zoznam dokumentov</title>
 	</data>
+	<data type="taskRef">
+		<id>person_forms</id>
+		<title/>
+	</data>
+
+	<!-- ASSOCIATION -->
     <data type="caseRef">
         <id>person_ids</id>
         <title/>
@@ -53,10 +59,7 @@
             <allowedNet>person</allowedNet>
         </allowedNets>
     </data>
-    <data type="taskRef">
-        <id>person_forms</id>
-        <title/>
-    </data>
+
     <transition>
         <id>t1</id>
         <x>220</x>

@@ -17,13 +17,6 @@
         <title>číslo</title>
     </data>
     <data type="caseRef">
-        <id>person_ids</id>
-        <title/>
-        <allowedNets>
-            <allowedNet>person</allowedNet>
-        </allowedNets>
-    </data>
-    <data type="caseRef">
         <id>book_id</id>
         <title/>
         <allowedNets>
@@ -38,6 +31,16 @@
 		<id>professor</id>
 		<title>Profesor</title>
 	</data>
+
+    <!-- ASSOCIATION -->
+    <data type="caseRef">
+        <id>person_ids</id>
+        <title/>
+        <allowedNets>
+            <allowedNet>person</allowedNet>
+        </allowedNets>
+    </data>
+
     <transition>
         <id>t1</id>
         <x>300</x>
