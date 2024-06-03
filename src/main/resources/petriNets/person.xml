@@ -263,20 +263,6 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>nationality_enumeration_map</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>3</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
 				<id>vehicle_forms</id>
 				<logic>
 					<behavior>editable</behavior>
@@ -336,26 +322,12 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>subjects</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>4</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
 				<id>subjects_map</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
 				<layout>
-					<x>2</x>
+					<x>0</x>
 					<y>4</y>
 					<rows>1</rows>
 					<cols>2</cols>

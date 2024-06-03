@@ -54,7 +54,7 @@ class CustomActionDelegate extends ActionDelegate {
     void createPersonProcessInstanceInTable(Connection connection, Case processInstance) {
         System.out.println("Idem robiť insert osoby")
         def sql = "INSERT INTO " + processInstance.processIdentifier + " (id, telephone_number,  " +
-                "sequence_number, document_file, date_of_registration, request_submitted, vehicle_header, vehicle_form, person_name, nationality_enumeration) VALUES(?,?,?,?,?,?,?,?,?,?)"
+                "sequence_number, document_file, date_of_registration, request_submitted, vehicle_header, vehicle_forms, person_name, nationality_enumeration) VALUES(?,?,?,?,?,?,?,?,?,?)"
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, processInstance.stringId)
@@ -67,7 +67,7 @@ class CustomActionDelegate extends ActionDelegate {
 
             statement.setString(7, processInstance.getDataField("vehicle_header").toString())
 
-            ArrayList<String> arrayList = processInstance.dataSet["vehicle_form"].value
+            ArrayList<String> arrayList = processInstance.dataSet["vehicle_forms"].value
             java.sql.Array array = connection.createArrayOf("VARCHAR", arrayList.toArray());
             statement.setArray(8, array)
 
@@ -82,11 +82,11 @@ class CustomActionDelegate extends ActionDelegate {
         }
 
         System.out.println("Idem robiť insert vozidla")
-        Case vehicleCase = workflowService.findOne(processInstance.dataSet["vehicle_id"].value[0].toString())
+        Case vehicleCase = workflowService.findOne(processInstance.dataSet["vehicle_ids"].value[0].toString())
         def sqlVehicle = "INSERT INTO vehicle (id, person_id, registration_date_time, seat_count, color, file_list) VALUES(?,?,?,?,?,?)"
 
         try (PreparedStatement statement = connection.prepareStatement(sqlVehicle)) {
-            statement.setString(1, processInstance.dataSet["vehicle_id"].value[0].toString())
+            statement.setString(1, processInstance.dataSet["vehicle_ids"].value[0].toString())
             statement.setString(2, processInstance.stringId)
             statement.setTimestamp(3, new java.sql.Timestamp((vehicleCase.getDataField("registration_date_time").value as java.util.Date).getTime()))
             statement.setInt(4, vehicleCase.getDataField("seat_count").value as int)
@@ -106,11 +106,11 @@ class CustomActionDelegate extends ActionDelegate {
         }
 
         System.out.println("Idem robiť insert vztahu")
-        def sql2 = "UPDATE " + processInstance.processIdentifier + " SET vehicle_id = ? WHERE id = ?"
+        def sql2 = "INSERT INTO person_vehicle (vehicle_id, person_id) VALUES(?,?)"
 
         try (PreparedStatement statement = connection.prepareStatement(sql2)) {
 
-            statement.setString(1, processInstance.dataSet["vehicle_id"].value[0].toString())
+            statement.setString(1, processInstance.dataSet["vehicle_ids"].value[0].toString())
             statement.setString(2, processInstance.stringId)
 
             statement.addBatch()
@@ -120,6 +120,22 @@ class CustomActionDelegate extends ActionDelegate {
             e.printStackTrace();
         }
 
+    }
+
+    void updateDataOfPersonProcessInstance(Connection connection, Case processInstance) {
+        def sql2 = "UPDATE " + processInstance.processIdentifier + " SET person_name = ? WHERE id = ?"
+
+        try (PreparedStatement statement = connection.prepareStatement(sql2)) {
+
+            statement.setString(1, processInstance.dataSet["person_name"].value[0].toString())
+            statement.setString(2, processInstance.stringId)
+
+            statement.addBatch()
+            statement.executeUpdate()
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     static boolean checkIfInstanceExistsInTable(Connection connection, String tableName, String stringId) {
